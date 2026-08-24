@@ -5,142 +5,205 @@ from history_manager import HistoryManager
 
 # ページ基本設定
 st.set_page_config(
-    page_title="YouTube テーマ別ランダムプレイヤー",
-    page_icon="🎬",
+    page_title="Freestyle YouTube! 🎧 DJ Random Player",
+    page_icon="🎛️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# カスタムCSS
+# カスタムCSS（ナイトライフ・ネオン・DJコントローラーデザイン）
 st.markdown("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
+    /* 全体背景 - クラブナイト・メッシュブラックグラデーション */
     .stApp {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-        color: #f8fafc;
+        background: radial-gradient(circle at 50% 10%, #1e1035 0%, #080912 60%, #030408 100%);
+        color: #e2e8f0;
+        font-family: 'Outfit', sans-serif;
     }
 
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #ff4b4b, #ff8c00);
+    /* サイドバー - メタル＆ダークコンソール調 */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #111322 0%, #090a14 100%);
+        border-right: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    /* タイトル - ネオンサイバーサイン */
+    .dj-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.8rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        background: linear-gradient(90deg, #ec4899 0%, #a855f7 50%, #06b6d4 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
         margin-bottom: 0.2rem;
-    }
-    .sub-title {
-        font-size: 0.95rem;
-        color: #94a3b8;
-        margin-bottom: 1.2rem;
-    }
-
-    .video-card {
-        background: rgba(30, 41, 59, 0.7);
-        border-radius: 12px;
-        padding: 1.2rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-    }
-    
-    .next-preview-card {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(49, 46, 129, 0.8));
-        border-left: 5px solid #6366f1;
-        border-radius: 10px;
-        padding: 0.9rem 1.2rem;
-        margin-bottom: 1rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    
-    .next-label {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: #818cf8;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
         display: flex;
         align-items: center;
-        gap: 6px;
-        margin-bottom: 4px;
+        gap: 12px;
     }
 
-    .next-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #ffffff;
-        margin-bottom: 4px;
+    .dj-subtitle {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 3px;
+        color: #38bdf8;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-
-    .badge {
-        display: inline-block;
+    
+    .dj-subtitle::before {
+        content: "🔴 LIVE";
+        font-size: 0.7rem;
         background: #ef4444;
         color: white;
-        padding: 3px 10px;
-        border-radius: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 800;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 1; }
+    }
+
+    /* DJデッキ風ネオン予告カード */
+    .next-deck-card {
+        background: linear-gradient(135deg, rgba(24, 24, 43, 0.9), rgba(15, 23, 42, 0.95));
+        border: 1px solid #a855f7;
+        border-left: 6px solid #38bdf8;
+        border-radius: 14px;
+        padding: 1rem 1.4rem;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 0 20px rgba(168, 85, 247, 0.25), inset 0 0 10px rgba(6, 182, 212, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .next-deck-label {
+        font-family: 'Orbitron', sans-serif;
         font-size: 0.8rem;
-        font-weight: 600;
+        font-weight: 800;
+        color: #38bdf8;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .next-deck-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 6px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    /* DJ SPINメインボタン */
+    div.stButton > button:first-child {
+        font-family: 'Orbitron', sans-serif;
+        background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
+        color: #ffffff;
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        padding: 0.9rem 2rem;
+        border-radius: 50px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 0 25px rgba(236, 72, 153, 0.5), 0 4px 15px rgba(0, 0, 0, 0.5);
+        transition: all 0.25s ease-in-out;
+        width: 100%;
+        text-transform: uppercase;
+    }
+    
+    div.stButton > button:first-child:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 35px rgba(168, 85, 247, 0.8), 0 6px 20px rgba(0, 0, 0, 0.7);
+        border-color: #ffffff;
+        background: linear-gradient(135deg, #f43f5e 0%, #c084fc 50%, #38bdf8 100%);
+    }
+
+    /* 再生中動画コンソール */
+    .now-playing-card {
+        background: rgba(15, 23, 42, 0.85);
+        border-radius: 14px;
+        padding: 1.4rem;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(12px);
+    }
+
+    /* バッジスタイリング */
+    .badge-theme {
+        background: linear-gradient(90deg, #ec4899, #8b5cf6);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        font-family: 'Orbitron', sans-serif;
         margin-right: 6px;
+        box-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
     }
 
     .badge-time {
-        display: inline-block;
-        background: #3b82f6;
-        color: white;
-        padding: 3px 10px;
-        border-radius: 12px;
+        background: rgba(6, 182, 212, 0.2);
+        border: 1px solid #06b6d4;
+        color: #38bdf8;
+        padding: 4px 12px;
+        border-radius: 20px;
         font-size: 0.8rem;
-        font-weight: 600;
+        font-weight: 700;
+        font-family: 'Orbitron', sans-serif;
         margin-right: 6px;
     }
 
     .badge-date {
-        display: inline-block;
-        background: #10b981;
-        color: white;
-        padding: 3px 10px;
-        border-radius: 12px;
+        background: rgba(16, 185, 129, 0.2);
+        border: 1px solid #10b981;
+        color: #34d399;
+        padding: 4px 12px;
+        border-radius: 20px;
         font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    div.stButton > button:first-child {
-        background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
-        color: white;
-        font-size: 1.15rem;
         font-weight: 700;
-        padding: 0.75rem 1.8rem;
-        border-radius: 50px;
-        border: none;
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-        transition: all 0.3s ease;
-        width: 100%;
-    }
-    
-    div.stButton > button:first-child:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
-        background: linear-gradient(90deg, #f87171 0%, #ef4444 100%);
     }
 
-    .summary-box {
-        background: rgba(15, 23, 42, 0.6);
-        border-radius: 8px;
-        padding: 10px 14px;
-        margin-top: 10px;
-        border-left: 3px solid #10b981;
-        font-size: 0.9rem;
+    /* 音声トラック要約ボックス */
+    .track-summary {
+        background: rgba(10, 15, 30, 0.8);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-top: 12px;
+        border-left: 4px solid #a855f7;
+        font-size: 0.92rem;
         color: #cbd5e1;
-        line-height: 1.5;
+        line-height: 1.6;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
     }
 
     .history-item {
         background: rgba(15, 23, 42, 0.6);
-        border-left: 4px solid #ef4444;
-        padding: 8px 12px;
+        border-left: 4px solid #ec4899;
+        padding: 10px 14px;
         margin-bottom: 8px;
-        border-radius: 4px;
+        border-radius: 6px;
         font-size: 0.88rem;
+        transition: background 0.2s ease;
+    }
+
+    .history-item:hover {
+        background: rgba(30, 41, 59, 0.8);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -159,41 +222,40 @@ if "last_theme" not in st.session_state:
 if "last_only_recent" not in st.session_state:
     st.session_state.last_only_recent = True
 
-# --- サイドバー ---
+# --- サイドバー (DJ CONSOLE SETTINGS) ---
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/youtube-play.png", width=64)
-    st.title("⚙️ 再生設定")
+    st.markdown('<h2 style="font-family:\'Orbitron\'; color:#a855f7; font-size:1.4rem;">🎛️ DJ CONSOLE</h2>', unsafe_allow_html=True)
     st.markdown("---")
 
     # 1. テーマ選択
     theme_options = list(THEME_KEYWORDS.keys()) + ["カスタム入力"]
     selected_theme = st.selectbox(
-        "📚 テーマを選択",
+        "🎧 SELECT GENRE / THEME",
         options=theme_options,
         index=0,
-        help="再生したい動画の分野・ジャンルを選択してください。"
+        help="再生したいテーマ・ジャンルを選択してください。"
     )
 
     custom_keyword = ""
     if selected_theme == "カスタム入力":
-        custom_keyword = st.text_input("🔍 カスタムキーワードを入力", placeholder="例: 心理学 テクニック")
+        custom_keyword = st.text_input("🔍 CUSTOM KEYWORD", placeholder="例: 心理学 テクニック")
 
     st.markdown("---")
 
-    # 2. 投稿日フィルター（1ヶ月以内チェックボックス）
-    st.subheader("📅 投稿日時フィルター")
+    # 2. 投稿日フィルター
+    st.subheader("📅 DATE FILTER")
     only_recent = st.checkbox(
-        "1ヶ月以内の動画のみに絞り込む",
+        "1ヶ月以内の最新トラックのみ",
         value=True,
-        help="過去30日以内に作成・投稿された最新の動画のみを抽出します。外すと過去の全動画が対象になります。"
+        help="過去30日以内に作成・投稿された最新動画のみに絞り込みます。"
     )
 
     st.markdown("---")
 
     # 3. 時間制限スライダー
-    st.subheader("⏱️ 動画の長さを制限")
+    st.subheader("⏱️ TRACK DURATION")
     duration_range = st.slider(
-        "分単位で指定",
+        "再生時間（分）",
         min_value=1,
         max_value=60,
         value=(5, 20),
@@ -206,26 +268,26 @@ with st.sidebar:
     st.markdown("---")
 
     # 4. 履歴管理
-    st.subheader("📜 履歴管理")
+    st.subheader("📜 CRATE HISTORY")
     watched_count = len(history_mgr.load_history())
-    st.write(f"再生済み動画数: **{watched_count}** 件")
+    st.write(f"PLAYED TRACKS: **{watched_count}**")
     
-    if st.button("🗑️ 履歴をクリア", use_container_width=True):
+    if st.button("🗑️ CLEAR CRATE", use_container_width=True):
         history_mgr.clear_history()
         st.session_state.current_video = None
         st.session_state.next_video = None
         st.session_state.cached_candidates = []
-        st.toast("再生履歴をクリアしました！", icon="🧹")
+        st.toast("履歴クレートをクリアしました！", icon="🧹")
         st.rerun()
 
-# ヘッダー
-st.markdown('<div class="main-title">🎬 YouTube テーマ別ランダムプレイヤー</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">5分〜20分の動画を自動再生。1ヶ月以内フィルタ・次回予告・要約機能付き。</div>', unsafe_allow_html=True)
+# メインヘッダー
+st.markdown('<div class="dj-title">🎧 FREESTYLE YOUTUBE!</div>', unsafe_allow_html=True)
+st.markdown('<div class="dj-subtitle">RANDOM TRACK SELECTOR & AUTOPLAY CONSOLE</div>', unsafe_allow_html=True)
 
 current_theme_key = custom_keyword if selected_theme == "カスタム入力" else selected_theme
 
 def prepare_candidates_and_next():
-    """条件変更時や候補が少ない場合に動画を再取得・選定"""
+    """テーマや条件変更時に動画を自動収集・選定"""
     if (st.session_state.last_theme != current_theme_key or 
         st.session_state.last_only_recent != only_recent or
         len(st.session_state.cached_candidates) < 2):
@@ -252,18 +314,18 @@ def prepare_candidates_and_next():
 if selected_theme != "カスタム入力" or custom_keyword.strip():
     prepare_candidates_and_next()
 
-# --- 次の動画（予告）カード ---
+# --- DJ ON DECK (次回予告カード) ---
 if st.session_state.next_video:
     nv = st.session_state.next_video
     date_str = nv.get('upload_date_formatted', '')
-    date_html = f"&nbsp;|&nbsp; 📅 投稿日: <strong>{date_str}</strong>" if date_str else ""
+    date_html = f"&nbsp;|&nbsp; 📅 {date_str}" if date_str else ""
     st.markdown(
         f"""
-        <div class="next-preview-card">
-            <div class="next-label">⏭️ 次に再生される動画（予告）</div>
-            <div class="next-title">{nv.get('title')}</div>
-            <div style="font-size: 0.85rem; color: #cbd5e1;">
-                📺 チャンネル: <strong>{nv.get('channel')}</strong> &nbsp;|&nbsp; ⏱️ 時間: <strong>{nv.get('duration_formatted')}</strong>{date_html}
+        <div class="next-deck-card">
+            <div class="next-deck-label">🎧 NEXT ON DECK (次回トラック予告)</div>
+            <div class="next-deck-title">{nv.get('title')}</div>
+            <div style="font-size: 0.88rem; color: #a5f3fc;">
+                📺 CHANNEL: <strong>{nv.get('channel')}</strong> &nbsp;|&nbsp; ⏱️ DURATION: <strong>{nv.get('duration_formatted')}</strong>{date_html}
             </div>
         </div>
         """,
@@ -272,13 +334,13 @@ if st.session_state.next_video:
 
 col_btn, _ = st.columns([2, 1])
 with col_btn:
-    play_clicked = st.button("🎲 次の動画に切り替える（自動再生スタート）", use_container_width=True)
+    play_clicked = st.button("🎛️ SPIN THE DECK (NEXT TRACK)", use_container_width=True)
 
 if play_clicked:
     if selected_theme == "カスタム入力" and not custom_keyword.strip():
         st.error("カスタムキーワードを入力してください。")
     else:
-        with st.spinner("次の動画を準備中... 🚀"):
+        with st.spinner("SPINNING THE DECK... ⚡"):
             if st.session_state.next_video:
                 st.session_state.current_video = st.session_state.next_video
                 history_mgr.add_to_history(st.session_state.current_video)
@@ -292,7 +354,7 @@ if play_clicked:
                     if cur_vid:
                         history_mgr.add_to_history(cur_vid)
                     if reset_occ:
-                        st.toast("一通りの動画を視聴したため、過去の動画を含めて再選択しました 🔄", icon="ℹ️")
+                        st.toast("一通りのトラックを視聴したため、クレートを循環再選択しました 🔄", icon="ℹ️")
 
             watched_ids = history_mgr.get_watched_ids()
             if st.session_state.current_video:
@@ -302,7 +364,7 @@ if play_clicked:
             st.session_state.next_video = new_next
             st.rerun()
 
-# --- メイン動画再生エリア ---
+# --- NOW PLAYING MAIN CONSOLE ---
 if st.session_state.current_video:
     video = st.session_state.current_video
     video_id = video["id"]
@@ -314,39 +376,39 @@ if st.session_state.current_video:
         components.iframe(iframe_src, height=450, scrolling=False)
 
     with col_details:
-        st.markdown('<div class="video-card">', unsafe_allow_html=True)
+        st.markdown('<div class="now-playing-card">', unsafe_allow_html=True)
         date_badge = f'<span class="badge-date">📅 {video.get("upload_date_formatted")}</span>' if video.get("upload_date_formatted") else ""
-        st.markdown(f'<span class="badge">{video.get("theme", "テーマ")}</span><span class="badge-time">⏱️ {video.get("duration_formatted")}</span>{date_badge}', unsafe_allow_html=True)
+        st.markdown(f'<span class="badge-theme">{video.get("theme", "GENRE")}</span><span class="badge-time">⏱️ {video.get("duration_formatted")}</span>{date_badge}', unsafe_allow_html=True)
         st.markdown(f"### {video.get('title')}")
-        st.markdown(f"**📺 チャンネル:** {video.get('channel')}")
-        st.markdown(f"**🔗 YouTubeで開く:** [{video.get('url')}]({video.get('url')})")
+        st.markdown(f"**📺 CHANNEL:** {video.get('channel')}")
+        st.markdown(f"**🔗 OPEN ON YOUTUBE:** [{video.get('url')}]({video.get('url')})")
         
-        st.markdown("#### 📝 動画の要約・ポイント")
-        st.markdown(f'<div class="summary-box">{video.get("summary", "要約情報はありません。")}</div>', unsafe_allow_html=True)
+        st.markdown("<h4 style='color:#c084fc; margin-top:14px;'>🎚️ TRACK SUMMARY & NOTES</h4>", unsafe_allow_html=True)
+        st.markdown(f'<div class="track-summary">{video.get("summary", "要約情報はありません。")}</div>', unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    st.info("👈 「🎲 次の動画に切り替える」ボタンを押すと、予告されている動画が自動再生でスタートします！")
+    st.info("👈 「🎛️ SPIN THE DECK」ボタンを押してトラック再生をスタート！")
 
 st.markdown("---")
 
-# 再生履歴
-st.subheader("📜 最近の再生履歴")
+# PLAYLIST CRATE HISTORY
+st.subheader("📜 PLAYLIST CRATE (HISTORY)")
 history_list = history_mgr.load_history()
 
 if history_list:
-    with st.expander(f"過去に再生した動画一覧 ({len(history_list)}件)", expanded=False):
+    with st.expander(f"CRATE ITEMS ({len(history_list)} TRACKS)", expanded=False):
         for idx, item in enumerate(history_list[:15]):
             st.markdown(
                 f"""
                 <div class="history-item">
                     <strong>{idx + 1}. [{item.get('theme')}] {item.get('title')}</strong> 
-                    ({item.get('duration_formatted', '')} - 投稿日: {item.get('upload_date_formatted', '不明')})
-                    <br><a href="{item.get('url')}" target="_blank" style="color: #60a5fa; font-size: 0.8rem;">YouTubeで開く ↗</a>
+                    ({item.get('duration_formatted', '')} - 📅 {item.get('upload_date_formatted', '不明')})
+                    <br><a href="{item.get('url')}" target="_blank" style="color: #38bdf8; font-size: 0.8rem;">PLAY ON YOUTUBE ↗</a>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 else:
-    st.caption("再生履歴はまだありません。")
+    st.caption("NO TRACKS IN CRATE YET.")
