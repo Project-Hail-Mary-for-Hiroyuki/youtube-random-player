@@ -25,9 +25,9 @@ PRESET_VIDEOS = {
             "upload_date_formatted": "2026/08/10 (14日前)",
             "days_ago": 14,
             "key_points": [
-                "💡 AIの定義と機械学習・ディープラーニングの違いを初心者向けに整理",
-                "⚡ ChatGPTをはじめとする生成AIのビジネス活用事例（文章作成・データ分析）",
-                "🎯 今後伸びるAIスキルと人間の役割分担のコツ"
+                "💡 【オープニング/導入】: AIの定義と機械学習・ディープラーニングの違いを初心者向けに整理",
+                "⚡ 【メインテーマ】: ChatGPTをはじめとする生成AIのビジネス活用事例（文章作成・データ分析）",
+                "🎯 【結論/まとめ】: 今後伸びるAIスキルと人間の役割分担のコツ"
             ],
             "summary": "AIの基本的な概念から、仕事や日常生活での最新活用シーンまで初心者向けにわかりやすく解説した動画です。"
         }
@@ -61,41 +61,58 @@ def clean_and_summarize(description: Optional[str]) -> str:
 
 def extract_key_points(video_id: str, description: Optional[str]) -> List[str]:
     """
-    YouTube字幕(Transcript)から動画本編の重要ポイント3選を抽出・要約。
-    字幕がない場合は説明文からキーポイントを生成。
+    YouTube字幕(Transcript)から動画本編の重要ポイント3選を日本語で抽出・要約。
+    英語字幕の場合は日本語へ自動翻訳して処理。
     """
     key_points = []
     
     try:
-        # 字幕データを取得（日本語または英語）
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['ja', 'en'])
+        # 字幕リストを取得
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
         
-        # 字幕テキストを結合
-        full_text = " ".join([item['text'] for item in transcript_list if item.get('text')])
+        # 1. 日本語字幕があれば取得、無ければ英語等の字幕を日本語へ自動翻訳
+        try:
+            transcript = transcript_list.find_transcript(['ja'])
+        except Exception:
+            # 英語などの元の字幕を日本語に自動翻訳
+            transcript = transcript_list.find_generated_transcript(['en', 'ja']) or transcript_list.find_transcript(['en'])
+            transcript = transcript.translate('ja')
+
+        fetched_data = transcript.fetch()
+        full_text = " ".join([item['text'] for item in fetched_data if item.get('text')])
         
-        # 意味のある文（20文字以上）をフィルタ
-        sentences = [s.strip() for s in re.split(r'[。！!？?\n]', full_text) if len(s.strip()) > 15]
+        # 意味のある文章を抽出
+        sentences = [s.strip() for s in re.split(r'[。！!？?\n]', full_text) if len(s.strip()) > 12]
         
         if len(sentences) >= 3:
-            # 序盤、中盤、終盤の重要フレーズを1つずつ抽出
             idx1 = min(1, len(sentences) - 1)
             idx2 = len(sentences) // 2
             idx3 = max(0, len(sentences) - 2)
             
-            p1 = sentences[idx1][:80]
-            p2 = sentences[idx2][:80]
-            p3 = sentences[idx3][:80]
+            p1 = sentences[idx1][:85]
+            p2 = sentences[idx2][:85]
+            p3 = sentences[idx3][:85]
             
             key_points = [
-                f"💡 【オープニング/導入】: {p1}...",
-                f"⚡ 【メインテーマ】: {p2}...",
-                f"🎯 【結論/まとめ】: {p3}..."
+                f"💡 【導入/ポイント1】: {p1}...",
+                f"⚡ 【本編/ポイント2】: {p2}...",
+                f"🎯 【結論/ポイント3】: {p3}..."
             ]
     except Exception:
-        # 字幕取得不可の場合のフォールバック
-        pass
+        # 字幕取得不可の場合のフォールバック（直近取得試行）
+        try:
+            raw_data = YouTubeTranscriptApi.get_transcript(video_id, languages=['ja', 'en'])
+            full_text = " ".join([item['text'] for item in raw_data if item.get('text')])
+            sentences = [s.strip() for s in re.split(r'[.!?。！!\n]', full_text) if len(s.strip()) > 12]
+            if len(sentences) >= 3:
+                key_points = [
+                    f"💡 【ポイント1】: {sentences[0][:80]}...",
+                    f"⚡ 【ポイント2】: {sentences[len(sentences)//2][:80]}...",
+                    f"🎯 【ポイント3】: {sentences[-1][:80]}..."
+                ]
+        except Exception:
+            pass
 
-    # 字幕から十分なポイントが得られなかった場合、説明文（description）を利用
     if not key_points and description:
         lines = [l.strip() for l in description.splitlines() if len(l.strip()) > 10 and not l.strip().startswith(('http', 'www', '#'))]
         if len(lines) >= 3:
@@ -187,7 +204,6 @@ class YouTubeService:
                             continue
 
                         if video_id:
-                            # ⚡ KEY POINTSの抽出生成
                             key_pts = extract_key_points(video_id, description)
 
                             videos.append({

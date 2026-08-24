@@ -172,7 +172,6 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* ⚡ KEY POINTS ディスプレイパネル */
     .key-points-box {
         background: rgba(18, 20, 38, 0.9);
         border-radius: 12px;
@@ -371,7 +370,8 @@ if st.session_state.current_video:
     col_player, col_details = st.columns([7, 5])
 
     with col_player:
-        iframe_src = f"https://www.youtube-nocookie.com/embed/{video_id}?autoplay=1&rel=0&enablejsapi=1"
+        # cc_load_policy=1 & cc_lang_pref=ja & hl=ja で日本語字幕を自動ON指定
+        iframe_src = f"https://www.youtube-nocookie.com/embed/{video_id}?autoplay=1&rel=0&enablejsapi=1&cc_load_policy=1&cc_lang_pref=ja&hl=ja"
         components.iframe(iframe_src, height=450, scrolling=False)
 
     with col_details:
@@ -382,8 +382,8 @@ if st.session_state.current_video:
         st.markdown(f"**📺 CHANNEL:** {video.get('channel')}")
         st.markdown(f"**🔗 OPEN ON YOUTUBE:** [{video.get('url')}]({video.get('url')})")
         
-        # ⚡ TRACK KEY POINTS! セクション
-        st.markdown("<h4 style='color:#eab308; margin-top:14px; font-family:\"Orbitron\", sans-serif; letter-spacing:1px;'>⚡ TRACK KEY POINTS!</h4>", unsafe_allow_html=True)
+        # ⚡ TRACK KEY POINTS! セクション（日本語要約表示）
+        st.markdown("<h4 style='color:#eab308; margin-top:14px; font-family:\"Orbitron\", sans-serif; letter-spacing:1px;'>⚡ TRACK KEY POINTS! (日本語要約)</h4>", unsafe_allow_html=True)
         
         key_pts = video.get("key_points", [])
         pts_html = "".join([f'<div class="key-point-item">{pt}</div>' for pt in key_pts])
