@@ -35,30 +35,6 @@ PRESET_VIDEOS = {
             "days_ago": 6,
             "summary": "ChatGPTをプロのように使いこなすためのプロンプト作成テクニックと具体例を凝縮して紹介します。"
         }
-    ],
-    "英語": [
-        {
-            "id": "juKd26qk5S0", 
-            "title": "【有料級】英語が聞き取れるようになるリスニング勉強法", 
-            "duration": 720, 
-            "channel": "英語ラウンジ", 
-            "theme": "英語",
-            "upload_date_formatted": "2026/08/05 (19日前)",
-            "days_ago": 19,
-            "summary": "ネイティブの発音ルール（音の連結・脱落）を理解し、最短でリスニング力を向上させるステップを解説。"
-        }
-    ],
-    "思考法": [
-        {
-            "id": "w9S68n_3Zms", 
-            "title": "頭が良い人の思考パターンと問題解決アプローチ", 
-            "duration": 850, 
-            "channel": "思考ラボ", 
-            "theme": "思考法",
-            "upload_date_formatted": "2026/08/12 (12日前)",
-            "days_ago": 12,
-            "summary": "複雑な課題をシンプルに整理・分解して根本解決に導くロジカルシンキングの実践フレームワークを伝授します。"
-        }
     ]
 }
 
@@ -88,7 +64,6 @@ def clean_and_summarize(description: Optional[str]) -> str:
 
 
 def parse_upload_date(upload_date_str: Optional[str]) -> tuple[str, int]:
-    """YYYYMMDD 文字列からフォーマット済み日付と経過日数を返す"""
     if not upload_date_str or len(upload_date_str) != 8:
         return "公開日不明", 9999
 
@@ -100,6 +75,19 @@ def parse_upload_date(upload_date_str: Optional[str]) -> tuple[str, int]:
         return formatted, days_ago
     except Exception:
         return "公開日不明", 9999
+
+
+def format_search_query(query: str) -> str:
+    """入力キーワードから番号や読点・カンマを除去し、綺麗なスペース区切りクエリに自動整形"""
+    if not query:
+        return query
+    # "1." や "2." などの数字+記号をスペースに変換
+    cleaned = re.sub(r'\d+\.|\d+[\.\s、,]', ' ', query)
+    # カンマ、読点、スラッシュ等をスペースに置換
+    cleaned = re.sub(r'[,、/\n]', ' ', cleaned)
+    # 連続するスペースを1つのスペースに集約
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return cleaned if cleaned else query
 
 
 class YouTubeService:
@@ -115,12 +103,8 @@ class YouTubeService:
         only_recent: bool = False,
         limit: int = 20
     ) -> List[Dict[str, Any]]:
-        """
-        指定テーマ・キーワードに沿って YouTube 動画を検索
-        min_duration〜max_duration の長さ制限と only_recent (30日以内) フィルタを適用
-        """
         if custom_keyword and custom_keyword.strip():
-            query = custom_keyword.strip()
+            query = format_search_query(custom_keyword)
         else:
             keywords = THEME_KEYWORDS.get(theme, [f"{theme} 解説"])
             query = random.choice(keywords)
@@ -144,7 +128,6 @@ class YouTubeService:
                     if duration is None:
                         continue
                     
-                    # 1. 時間制限フィルタ
                     if min_duration <= duration <= max_duration:
                         video_id = entry.get('id')
                         title = entry.get('title', '無題')
@@ -154,7 +137,6 @@ class YouTubeService:
                         
                         date_formatted, days_ago = parse_upload_date(upload_date_str)
 
-                        # 2. 1ヶ月以内 (30日以内) フィルタ
                         if only_recent and days_ago > 30:
                             continue
 
@@ -166,7 +148,7 @@ class YouTubeService:
                                 'duration_formatted': f"{duration // 60}分{duration % 60:02d}秒",
                                 'channel': channel,
                                 'url': f"https://www.youtube.com/watch?v={video_id}",
-                                'theme': theme if not custom_keyword else custom_keyword,
+                                'theme': theme if not custom_keyword else query,
                                 'upload_date_formatted': date_formatted,
                                 'days_ago': days_ago,
                                 'summary': clean_and_summarize(description)
@@ -174,7 +156,6 @@ class YouTubeService:
         except Exception as e:
             print(f"yt-dlp search error: {e}")
 
-        # フォールバック
         if not videos:
             preset = PRESET_VIDEOS.get(theme, PRESET_VIDEOS.get("AI", []))
             for item in preset:
