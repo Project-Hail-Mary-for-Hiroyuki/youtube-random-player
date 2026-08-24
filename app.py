@@ -11,27 +11,24 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# カスタムCSS（ナイトライフ・ネオン・DJコントローラーデザイン）
+# カスタムCSS
 st.markdown("""
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-    /* 全体背景 - クラブナイト・メッシュブラックグラデーション */
     .stApp {
         background: radial-gradient(circle at 50% 10%, #1e1035 0%, #080912 60%, #030408 100%);
         color: #e2e8f0;
         font-family: 'Outfit', sans-serif;
     }
 
-    /* サイドバー - メタル＆ダークコンソール調 */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #111322 0%, #090a14 100%);
         border-right: 1px solid rgba(168, 85, 247, 0.2);
     }
 
-    /* タイトル - ネオンサイバーサイン */
     .dj-title {
         font-family: 'Orbitron', sans-serif;
         font-size: 2.8rem;
@@ -76,7 +73,6 @@ st.markdown("""
         100% { opacity: 1; }
     }
 
-    /* DJデッキ風ネオン予告カード */
     .next-deck-card {
         background: linear-gradient(135deg, rgba(24, 24, 43, 0.9), rgba(15, 23, 42, 0.95));
         border: 1px solid #a855f7;
@@ -110,7 +106,6 @@ st.markdown("""
         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
-    /* DJ SPINメインボタン */
     div.stButton > button:first-child {
         font-family: 'Orbitron', sans-serif;
         background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #6366f1 100%);
@@ -134,7 +129,6 @@ st.markdown("""
         background: linear-gradient(135deg, #f43f5e 0%, #c084fc 50%, #38bdf8 100%);
     }
 
-    /* 再生中動画コンソール */
     .now-playing-card {
         background: rgba(15, 23, 42, 0.85);
         border-radius: 14px;
@@ -144,7 +138,6 @@ st.markdown("""
         backdrop-filter: blur(12px);
     }
 
-    /* バッジスタイリング */
     .badge-theme {
         background: linear-gradient(90deg, #ec4899, #8b5cf6);
         color: white;
@@ -179,17 +172,28 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* 音声トラック要約ボックス */
-    .track-summary {
-        background: rgba(10, 15, 30, 0.8);
-        border-radius: 10px;
-        padding: 12px 16px;
-        margin-top: 12px;
-        border-left: 4px solid #a855f7;
-        font-size: 0.92rem;
-        color: #cbd5e1;
-        line-height: 1.6;
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+    /* ⚡ KEY POINTS ディスプレイパネル */
+    .key-points-box {
+        background: rgba(18, 20, 38, 0.9);
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-top: 14px;
+        border-left: 5px solid #eab308;
+        border-right: 1px solid rgba(234, 179, 8, 0.3);
+        border-top: 1px solid rgba(234, 179, 8, 0.3);
+        border-bottom: 1px solid rgba(234, 179, 8, 0.3);
+        box-shadow: 0 0 20px rgba(234, 179, 8, 0.15);
+    }
+
+    .key-point-item {
+        font-size: 0.9rem;
+        color: #fef08a;
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+
+    .key-point-item:last-child {
+        margin-bottom: 0;
     }
 
     .history-item {
@@ -222,12 +226,11 @@ if "last_theme" not in st.session_state:
 if "last_only_recent" not in st.session_state:
     st.session_state.last_only_recent = True
 
-# --- サイドバー (DJ CONSOLE SETTINGS) ---
+# --- サイドバー ---
 with st.sidebar:
     st.markdown('<h2 style="font-family:\'Orbitron\'; color:#a855f7; font-size:1.4rem;">🎛️ DJ CONSOLE</h2>', unsafe_allow_html=True)
     st.markdown("---")
 
-    # 1. テーマ選択
     theme_options = list(THEME_KEYWORDS.keys()) + ["カスタム入力"]
     selected_theme = st.selectbox(
         "🎧 SELECT GENRE / THEME",
@@ -238,11 +241,10 @@ with st.sidebar:
 
     custom_keyword = ""
     if selected_theme == "カスタム入力":
-        custom_keyword = st.text_input("🔍 CUSTOM KEYWORD", placeholder="例: 心理学 テクニック")
+        custom_keyword = st.text_input("🔍 CUSTOM KEYWORD", placeholder="例: 1.ロック 2.80年代 3.女性ボーカル")
 
     st.markdown("---")
 
-    # 2. 投稿日フィルター
     st.subheader("📅 DATE FILTER")
     only_recent = st.checkbox(
         "1ヶ月以内の最新トラックのみ",
@@ -252,7 +254,6 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # 3. 時間制限スライダー
     st.subheader("⏱️ TRACK DURATION")
     duration_range = st.slider(
         "再生時間（分）",
@@ -267,7 +268,6 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # 4. 履歴管理
     st.subheader("📜 CRATE HISTORY")
     watched_count = len(history_mgr.load_history())
     st.write(f"PLAYED TRACKS: **{watched_count}**")
@@ -287,7 +287,6 @@ st.markdown('<div class="dj-subtitle">RANDOM TRACK SELECTOR & AUTOPLAY CONSOLE</
 current_theme_key = custom_keyword if selected_theme == "カスタム入力" else selected_theme
 
 def prepare_candidates_and_next():
-    """テーマや条件変更時に動画を自動収集・選定"""
     if (st.session_state.last_theme != current_theme_key or 
         st.session_state.last_only_recent != only_recent or
         len(st.session_state.cached_candidates) < 2):
@@ -314,7 +313,7 @@ def prepare_candidates_and_next():
 if selected_theme != "カスタム入力" or custom_keyword.strip():
     prepare_candidates_and_next()
 
-# --- DJ ON DECK (次回予告カード) ---
+# --- NEXT ON DECK ---
 if st.session_state.next_video:
     nv = st.session_state.next_video
     date_str = nv.get('upload_date_formatted', '')
@@ -383,8 +382,12 @@ if st.session_state.current_video:
         st.markdown(f"**📺 CHANNEL:** {video.get('channel')}")
         st.markdown(f"**🔗 OPEN ON YOUTUBE:** [{video.get('url')}]({video.get('url')})")
         
-        st.markdown("<h4 style='color:#c084fc; margin-top:14px;'>🎚️ TRACK SUMMARY & NOTES</h4>", unsafe_allow_html=True)
-        st.markdown(f'<div class="track-summary">{video.get("summary", "要約情報はありません。")}</div>', unsafe_allow_html=True)
+        # ⚡ TRACK KEY POINTS! セクション
+        st.markdown("<h4 style='color:#eab308; margin-top:14px; font-family:\"Orbitron\", sans-serif; letter-spacing:1px;'>⚡ TRACK KEY POINTS!</h4>", unsafe_allow_html=True)
+        
+        key_pts = video.get("key_points", [])
+        pts_html = "".join([f'<div class="key-point-item">{pt}</div>' for pt in key_pts])
+        st.markdown(f'<div class="key-points-box">{pts_html}</div>', unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
 

@@ -3,6 +3,7 @@ import yt_dlp
 import re
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+from youtube_transcript_api import YouTubeTranscriptApi
 
 THEME_KEYWORDS = {
     "AI": ["AI 活用 最新", "ChatGPT 使い方 解説", "生成AI 入門", "AIニュース わかりやすく"],
@@ -23,24 +24,19 @@ PRESET_VIDEOS = {
             "theme": "AI",
             "upload_date_formatted": "2026/08/10 (14日前)",
             "days_ago": 14,
+            "key_points": [
+                "💡 AIの定義と機械学習・ディープラーニングの違いを初心者向けに整理",
+                "⚡ ChatGPTをはじめとする生成AIのビジネス活用事例（文章作成・データ分析）",
+                "🎯 今後伸びるAIスキルと人間の役割分担のコツ"
+            ],
             "summary": "AIの基本的な概念から、仕事や日常生活での最新活用シーンまで初心者向けにわかりやすく解説した動画です。"
-        },
-        {
-            "id": "L_LUpnjgPso", 
-            "title": "ChatGPT実践活用法まとめ", 
-            "duration": 900, 
-            "channel": "テック解説", 
-            "theme": "AI",
-            "upload_date_formatted": "2026-08-18 (6日前)",
-            "days_ago": 6,
-            "summary": "ChatGPTをプロのように使いこなすためのプロンプト作成テクニックと具体例を凝縮して紹介します。"
         }
     ]
 }
 
 def clean_and_summarize(description: Optional[str]) -> str:
     if not description or not description.strip():
-        return "この動画のテキスト概要はありません。動画をご視聴ください。"
+        return "この動画のテキスト概要はありません。"
 
     lines = description.splitlines()
     clean_lines = []
@@ -63,6 +59,60 @@ def clean_and_summarize(description: Optional[str]) -> str:
     return summary_text
 
 
+def extract_key_points(video_id: str, description: Optional[str]) -> List[str]:
+    """
+    YouTube字幕(Transcript)から動画本編の重要ポイント3選を抽出・要約。
+    字幕がない場合は説明文からキーポイントを生成。
+    """
+    key_points = []
+    
+    try:
+        # 字幕データを取得（日本語または英語）
+        transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['ja', 'en'])
+        
+        # 字幕テキストを結合
+        full_text = " ".join([item['text'] for item in transcript_list if item.get('text')])
+        
+        # 意味のある文（20文字以上）をフィルタ
+        sentences = [s.strip() for s in re.split(r'[。！!？?\n]', full_text) if len(s.strip()) > 15]
+        
+        if len(sentences) >= 3:
+            # 序盤、中盤、終盤の重要フレーズを1つずつ抽出
+            idx1 = min(1, len(sentences) - 1)
+            idx2 = len(sentences) // 2
+            idx3 = max(0, len(sentences) - 2)
+            
+            p1 = sentences[idx1][:80]
+            p2 = sentences[idx2][:80]
+            p3 = sentences[idx3][:80]
+            
+            key_points = [
+                f"💡 【オープニング/導入】: {p1}...",
+                f"⚡ 【メインテーマ】: {p2}...",
+                f"🎯 【結論/まとめ】: {p3}..."
+            ]
+    except Exception:
+        # 字幕取得不可の場合のフォールバック
+        pass
+
+    # 字幕から十分なポイントが得られなかった場合、説明文（description）を利用
+    if not key_points and description:
+        lines = [l.strip() for l in description.splitlines() if len(l.strip()) > 10 and not l.strip().startswith(('http', 'www', '#'))]
+        if len(lines) >= 3:
+            key_points = [
+                f"💡 ポイント1: {lines[0][:75]}",
+                f"⚡ ポイント2: {lines[1][:75]}",
+                f"🎯 ポイント3: {lines[2][:75]}"
+            ]
+        elif lines:
+            key_points = [f"💡 動画の概要: {lines[0][:150]}"]
+
+    if not key_points:
+        key_points = ["💡 本編のキーポイント情報はありません。動画をご視聴ください。"]
+
+    return key_points
+
+
 def parse_upload_date(upload_date_str: Optional[str]) -> tuple[str, int]:
     if not upload_date_str or len(upload_date_str) != 8:
         return "公開日不明", 9999
@@ -78,14 +128,10 @@ def parse_upload_date(upload_date_str: Optional[str]) -> tuple[str, int]:
 
 
 def format_search_query(query: str) -> str:
-    """入力キーワードから番号や読点・カンマを除去し、綺麗なスペース区切りクエリに自動整形"""
     if not query:
         return query
-    # "1." や "2." などの数字+記号をスペースに変換
     cleaned = re.sub(r'\d+\.|\d+[\.\s、,]', ' ', query)
-    # カンマ、読点、スラッシュ等をスペースに置換
     cleaned = re.sub(r'[,、/\n]', ' ', cleaned)
-    # 連続するスペースを1つのスペースに集約
     cleaned = re.sub(r'\s+', ' ', cleaned).strip()
     return cleaned if cleaned else query
 
@@ -141,6 +187,9 @@ class YouTubeService:
                             continue
 
                         if video_id:
+                            # ⚡ KEY POINTSの抽出生成
+                            key_pts = extract_key_points(video_id, description)
+
                             videos.append({
                                 'id': video_id,
                                 'title': title,
@@ -151,6 +200,7 @@ class YouTubeService:
                                 'theme': theme if not custom_keyword else query,
                                 'upload_date_formatted': date_formatted,
                                 'days_ago': days_ago,
+                                'key_points': key_pts,
                                 'summary': clean_and_summarize(description)
                             })
         except Exception as e:
